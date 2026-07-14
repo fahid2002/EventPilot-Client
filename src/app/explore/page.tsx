@@ -36,7 +36,7 @@ export default function ExplorePage() {
   }, []);
 
   const filtered = useMemo(() => {
-    let list = [...events].filter((event) => {
+    const list = [...events].filter((event) => {
       return event.title.toLowerCase().includes(search.toLowerCase())
         && (!category || event.category === category)
         && (!location || event.location === location)

@@ -8,6 +8,9 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 
+const demoEmail = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL || "demo@eventpilot.dev";
+const demoPassword = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD || "Demo@123";
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -32,8 +35,8 @@ export default function LoginPage() {
   };
 
   const fillDemo = () => {
-    setEmail("demo@eventpilot.dev");
-    setPassword("Demo@123");
+    setEmail(demoEmail);
+    setPassword(demoPassword);
     showToast("Demo credentials filled. Demo users can browse but cannot save, attend, review, or pay.", "info");
   };
 
@@ -47,8 +50,8 @@ export default function LoginPage() {
         </p>
         <div className="mt-8 rounded-[2rem] bg-slate-950 p-7 text-white">
           <h3 className="text-xl font-black">Demo account</h3>
-          <p className="mt-3 text-slate-300">Email: demo@eventpilot.dev</p>
-          <p className="text-slate-300">Password: Demo@123</p>
+          <p className="mt-3 text-slate-300">Email: {demoEmail}</p>
+          <p className="text-slate-300">Password: {demoPassword}</p>
           <p className="mt-3 text-slate-400">The demo account is view-only for safe public preview.</p>
         </div>
       </div>

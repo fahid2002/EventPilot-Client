@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CalendarDays, MapPin, Star, Users } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
-import { fallbackEvents } from "@/data/fallbackEvents";
 import { api } from "@/lib/api";
 import { formatDate, formatPrice } from "@/lib/utils";
 import type { EventItem } from "@/types";
@@ -16,6 +15,7 @@ export default function EventDetailsPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [event, setEvent] = useState<EventItem | null>(null);
+  const [related, setRelated] = useState<EventItem[]>([]);
   const [comment, setComment] = useState("");
   const { user, token, isAuthenticated } = useAuth();
   const { openLoginRequired } = useActionGuard();
@@ -28,15 +28,24 @@ export default function EventDetailsPage() {
         const response = await api.getEvent(params.id);
         if (!cancelled) setEvent(response.data.event);
       } catch {
-        const local = fallbackEvents.find((item) => item._id === params.id) || fallbackEvents[0];
-        if (!cancelled) setEvent(local);
+        if (!cancelled) setEvent(null);
       }
     }
     load();
     return () => { cancelled = true; };
   }, [params.id]);
 
-  const related = useMemo(() => fallbackEvents.filter((item) => item._id !== event?._id).slice(0, 4), [event]);
+  useEffect(() => {
+    let cancelled = false;
+    api.getEvents("?limit=4&status=approved")
+      .then((response) => {
+        if (!cancelled) setRelated(response.data.events.filter((item) => item._id !== params.id).slice(0, 4));
+      })
+      .catch(() => {
+        if (!cancelled) setRelated([]);
+      });
+    return () => { cancelled = true; };
+  }, [params.id]);
 
   const guard = () => {
     if (!isAuthenticated || !token || user?.isDemo) {
@@ -163,7 +172,11 @@ export default function EventDetailsPage() {
       <div className="mt-10">
         <h2 className="text-2xl font-black">Related events</h2>
         <div className="mt-5 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {related.map((item, index) => <EventCard key={item._id} event={item} index={index} />)}
+          {related.length ? related.map((item, index) => <EventCard key={item._id} event={item} index={index} />) : (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-slate-500 dark:border-slate-700 dark:bg-slate-900 md:col-span-2 lg:col-span-4">
+              No related approved events are available yet.
+            </div>
+          )}
         </div>
       </div>
     </section>

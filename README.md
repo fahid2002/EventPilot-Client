@@ -41,6 +41,7 @@ npm run dev
 - Login has a role selector. The selected role must match the account type in MongoDB.
 - Registration has a role selector for `user` and `organizer`.
 - User and organizer records are separate, even when they use the same email.
+- `/items/add` and `/items/manage` are protected organizer/admin pages. Logged-out users are redirected to `/login`; normal users are redirected back to the dashboard.
 - Google login is only for already registered user/organizer accounts.
 - Unknown Google emails redirect to registration after a meaningful toast.
 - Already registered Google emails on the registration page redirect to login after a meaningful toast.
@@ -72,6 +73,9 @@ The app uses Google Identity Services token verification on the server.
 
 - Demo login autofill now reads from env and remains user-only.
 - Added role selectors for login and registration.
+- Added exact protected `/items/add` and `/items/manage` pages backed by MongoDB event APIs.
+- Dashboard event management now uses live MongoDB records instead of local fallback data.
+- Public event listing, details, and payment pages no longer silently replace failed API data with local event records.
 - Split Google login and Google registration behavior.
 - Google login no longer creates accounts automatically.
 - Added env documentation for demo and admin login behavior.

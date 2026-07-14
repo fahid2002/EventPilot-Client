@@ -26,7 +26,11 @@ export function EventCarousel({ events }: { events: EventItem[] }) {
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {visible.map((event, index) => <EventCard key={event._id} event={event} index={index} />)}
+          {visible.length ? visible.map((event, index) => <EventCard key={event._id} event={event} index={index} />) : (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-slate-500 dark:border-slate-700 dark:bg-slate-900 md:col-span-2 lg:col-span-4">
+              No approved events are published yet.
+            </div>
+          )}
         </div>
       </div>
     </section>

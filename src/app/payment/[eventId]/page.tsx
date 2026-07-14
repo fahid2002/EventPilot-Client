@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CreditCard, Lock, ShieldCheck } from "lucide-react";
-import { fallbackEvents } from "@/data/fallbackEvents";
 import { api } from "@/lib/api";
 import type { EventItem } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,9 +20,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fallback = fallbackEvents.find((item) => item._id === params.eventId) || fallbackEvents[0];
-    setEvent(fallback);
-    api.getEvent(params.eventId).then((response) => setEvent(response.data.event)).catch(() => undefined);
+    api.getEvent(params.eventId).then((response) => setEvent(response.data.event)).catch(() => setEvent(null));
   }, [params.eventId]);
 
   const demoUpgrade = async () => {

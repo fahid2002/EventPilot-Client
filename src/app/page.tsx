@@ -3,10 +3,23 @@ import { BarChart3, CheckCircle2, Database, ShieldCheck, Users, CalendarDays, Se
 import { HeroSlider } from "@/components/HeroSlider";
 import { EventCarousel } from "@/components/EventCarousel";
 import { EventCard } from "@/components/EventCard";
-import { fallbackEvents } from "@/data/fallbackEvents";
+import { API_URL } from "@/lib/api";
+import type { ApiResponse, EventItem } from "@/types";
 
-export default function HomePage() {
-  const featured = fallbackEvents.slice(0, 4);
+async function loadFeaturedEvents() {
+  try {
+    const response = await fetch(`${API_URL}/events?limit=8&status=approved`, { cache: "no-store" });
+    if (!response.ok) return [];
+    const payload = await response.json() as ApiResponse<{ events: EventItem[] }>;
+    return payload.data.events;
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const events = await loadFeaturedEvents();
+  const featured = events.slice(0, 4);
 
   return (
     <>
@@ -65,7 +78,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <EventCarousel events={fallbackEvents} />
+      <EventCarousel events={events} />
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -99,7 +112,11 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-2xl text-slate-600 dark:text-slate-300">Cards use consistent height, matching button alignment, and clear free/premium status.</p>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {featured.map((event, index) => <EventCard key={event._id} event={event} index={index} />)}
+            {featured.length ? featured.map((event, index) => <EventCard key={event._id} event={event} index={index} />) : (
+              <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-slate-500 dark:border-slate-700 dark:bg-slate-900 md:col-span-2 lg:col-span-4">
+                No approved events are published yet.
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -36,6 +36,12 @@ export function Navbar() {
   };
 
   const avatar = user?.photoUrl;
+  const canOrganize = user?.role === "organizer" || user?.role === "admin";
+  const authedLinks = [
+    { href: "/dashboard", label: "Dashboard", show: isAuthenticated },
+    { href: "/items/add", label: "Add Event", show: isAuthenticated && canOrganize },
+    { href: "/items/manage", label: "Manage", show: isAuthenticated && canOrganize }
+  ];
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/20 bg-white/85 shadow-sm glass dark:border-slate-800 dark:bg-slate-950/85">
@@ -55,11 +61,15 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated ? (
-            <Link href="/dashboard" className="rounded-xl px-4 py-2 text-sm font-black hover:bg-slate-100 dark:hover:bg-slate-900">
-              Dashboard
+          {authedLinks.filter((link) => link.show).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`rounded-xl px-4 py-2 text-sm font-black hover:bg-slate-100 dark:hover:bg-slate-900 ${pathname === link.href ? "text-brand-600" : ""}`}
+            >
+              {link.label}
             </Link>
-          ) : null}
+          ))}
         </div>
 
         <div className="flex items-center gap-2">
@@ -70,11 +80,11 @@ export function Navbar() {
           {isAuthenticated && user ? (
             <Link href="/dashboard" className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex">
               <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-slate-200 text-xs font-black text-slate-500 dark:bg-slate-700">
-                {avatar ? <img src={avatar} alt={`${user.name} profile`} className="h-full w-full object-cover" /> : "👤"}
+                {avatar ? <img src={avatar} alt={`${user.name} profile`} className="h-full w-full object-cover" /> : user.name.slice(0, 1).toUpperCase()}
               </div>
               <div className="leading-tight">
                 <p className="text-xs font-black">{user.name}</p>
-                <p className="text-[11px] font-bold capitalize text-brand-600">{user.role} • {user.membership}</p>
+                <p className="text-[11px] font-bold capitalize text-brand-600">{user.role} | {user.membership}</p>
               </div>
             </Link>
           ) : null}
@@ -103,7 +113,11 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {isAuthenticated ? <Link onClick={() => setOpen(false)} href="/dashboard" className="rounded-xl px-4 py-3 text-left font-black hover:bg-slate-100 dark:hover:bg-slate-900">Dashboard</Link> : null}
+            {authedLinks.filter((link) => link.show).map((link) => (
+              <Link key={link.href} onClick={() => setOpen(false)} href={link.href} className="rounded-xl px-4 py-3 text-left font-black hover:bg-slate-100 dark:hover:bg-slate-900">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       ) : null}

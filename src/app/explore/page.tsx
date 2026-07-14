@@ -2,14 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EventCard } from "@/components/EventCard";
-import { fallbackEvents } from "@/data/fallbackEvents";
 import { api } from "@/lib/api";
 import type { EventItem } from "@/types";
 
 const perPage = 8;
 
 export default function ExplorePage() {
-  const [events, setEvents] = useState<EventItem[]>(fallbackEvents);
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -24,9 +23,9 @@ export default function ExplorePage() {
       setLoading(true);
       try {
         const response = await api.getEvents("?limit=100&status=approved");
-        if (!cancelled) setEvents(response.data.events.length ? response.data.events : fallbackEvents);
+        if (!cancelled) setEvents(response.data.events);
       } catch {
-        if (!cancelled) setEvents(fallbackEvents);
+        if (!cancelled) setEvents([]);
       } finally {
         if (!cancelled) setLoading(false);
       }

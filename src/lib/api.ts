@@ -39,6 +39,7 @@ export const api = {
   saveEvent: (eventId: string, token: string) => request<{ saved: boolean }>(`/users/saved/${eventId}`, { method: "POST", token }),
   attendEvent: (eventId: string, token: string) => request<{ attending: boolean; redirectToPayment?: boolean }>(`/users/attend/${eventId}`, { method: "POST", token }),
   reviewWebsite: (payload: { rating: number; comment: string }, token: string) => request<{ reviewId: string }>("/users/reviews", { method: "POST", token, body: JSON.stringify(payload) }),
+  manageEvents: (token: string) => request<{ events: EventItem[] }>("/events/manage/list", { token }),
   addEvent: (payload: Partial<EventItem>, token: string) => request<{ event: EventItem }>("/events", { method: "POST", token, body: JSON.stringify(payload) }),
   deleteEvent: (id: string, token: string) => request<{ deleted: boolean }>(`/events/${id}`, { method: "DELETE", token }),
   createCheckout: (eventId: string, token: string) => request<{ url: string }>(`/payments/checkout/${eventId}`, { method: "POST", token }),

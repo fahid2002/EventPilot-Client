@@ -1,4 +1,4 @@
-import type { ApiResponse, EventItem, User, DashboardSummary } from "@/types";
+import type { ApiResponse, EventItem, User, DashboardSummary, Role } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -30,9 +30,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
 export const api = {
   getEvents: (query = "") => request<{ events: EventItem[]; total: number; page: number; pages: number }>(`/events${query}`),
   getEvent: (id: string) => request<{ event: EventItem }>(`/events/${id}`),
-  login: (payload: { email: string; password: string }) => request<{ user: User; token: string }>("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
-  register: (payload: { name: string; email: string; password: string; photoUrl?: string }) => request<{ user: User; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
-  googleLogin: (credential: string) => request<{ user: User; token: string }>("/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
+  login: (payload: { email: string; password: string; role: Role }) => request<{ user: User; token: string }>("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  register: (payload: { name: string; email: string; password: string; photoUrl?: string; role: Exclude<Role, "admin"> }) => request<{ user: User; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
+  googleLogin: (credential: string, role: Exclude<Role, "admin">) => request<{ user: User; token: string }>("/auth/google", { method: "POST", body: JSON.stringify({ credential, role }) }),
+  googleRegister: (credential: string, role: Exclude<Role, "admin">) => request<{ user: User; token: string }>("/auth/google/register", { method: "POST", body: JSON.stringify({ credential, role }) }),
   me: (token: string) => request<{ user: User }>("/auth/me", { token }),
   dashboard: (token: string) => request<{ summary: DashboardSummary; saved: EventItem[]; attending: EventItem[]; recommended: EventItem[] }>("/users/dashboard", { token }),
   saveEvent: (eventId: string, token: string) => request<{ saved: boolean }>(`/users/saved/${eventId}`, { method: "POST", token }),

@@ -7,6 +7,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
+import type { Role } from "@/types";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [role, setRole] = useState<Exclude<Role, "admin">>("user");
   const [loading, setLoading] = useState(false);
 
   const previewPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +42,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const response = await api.register({ name, email, password, photoUrl });
+      const response = await api.register({ name, email, password, photoUrl, role });
       login(response.data.user, response.data.token);
       showToast("Account created successfully.", "success");
       router.push("/dashboard");
@@ -60,7 +62,16 @@ export default function RegisterPage() {
       <form onSubmit={submit} className="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-soft dark:border-slate-800 dark:bg-slate-900">
         <p className="font-black text-brand-600">Registration</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Create your EventPilot account</h1>
-        <p className="mt-3 text-slate-600 dark:text-slate-300">Photo is optional. New accounts start as free users. Admin can upgrade accounts to organizer, and the payment page can upgrade membership to premium.</p>
+        <p className="mt-3 text-slate-600 dark:text-slate-300">Choose whether this account is for a user or organizer. Admin accounts are created only from the server seed credentials.</p>
+
+        <div className="mt-7">
+          <label className="block text-sm font-black">Register as</label>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(["user", "organizer"] as Array<Exclude<Role, "admin">>).map((option) => (
+              <button key={option} type="button" onClick={() => setRole(option)} className={`h-12 rounded-2xl border px-4 font-black capitalize ${role === option ? "border-transparent bg-gradient-to-r from-brand-600 to-mint-500 text-white" : "border-slate-200 dark:border-slate-800"}`}>{option}</button>
+            ))}
+          </div>
+        </div>
 
         <div className="mt-7 flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-slate-200 text-4xl text-slate-500 dark:bg-slate-700">
@@ -103,15 +114,20 @@ export default function RegisterPage() {
                 return;
               }
               try {
-                const response = await api.googleLogin(credentialResponse.credential);
+                const response = await api.googleRegister(credentialResponse.credential, role);
                 login(response.data.user, response.data.token);
                 showToast("Google account connected successfully.", "success");
                 router.push("/dashboard");
               } catch (error) {
-                showToast(error instanceof Error ? error.message : "Google registration failed.", "error");
+                const message = error instanceof Error ? error.message : "Google registration failed.";
+                showToast(message, "error");
+                if (message.toLowerCase().includes("already")) {
+                  window.setTimeout(() => router.push("/login"), 1200);
+                }
               }
             }}
             onError={() => showToast("Google registration failed. Check your Google client ID.", "error")}
+            text="continue_with"
             width="100%"
           />
         </div>

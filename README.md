@@ -38,8 +38,14 @@ npm run dev
 
 - Demo autofill logs in only the demo user account.
 - Demo users can browse but cannot save, attend, review, pay, or modify data.
+- Login has a role selector. The selected role must match the account type in MongoDB.
+- Registration has a role selector for `user` and `organizer`.
+- User and organizer records are separate, even when they use the same email.
+- Google login is only for already registered user/organizer accounts.
+- Unknown Google emails redirect to registration after a meaningful toast.
+- Already registered Google emails on the registration page redirect to login after a meaningful toast.
 - Admin login uses the normal login form with the server-side seeded admin credentials.
-- Organizer accounts are not demo-filled and are not seeded; users register first, then admin can promote them.
+- Admin login is email/password only, not Google.
 
 ## Google OAuth
 
@@ -65,6 +71,9 @@ The app uses Google Identity Services token verification on the server.
 ## Recent Configuration Work
 
 - Demo login autofill now reads from env and remains user-only.
+- Added role selectors for login and registration.
+- Split Google login and Google registration behavior.
+- Google login no longer creates accounts automatically.
 - Added env documentation for demo and admin login behavior.
 - Fixed the production build lint issue in the explore page.
 - Ignored generated Next files in ESLint config.

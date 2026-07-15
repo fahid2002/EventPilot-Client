@@ -104,7 +104,7 @@ export default function LoginPage() {
         <label className="block text-sm font-black">Email address</label>
         <input value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950" placeholder="fahid@example.com" />
         <label className="mt-4 block text-sm font-black">Password</label>
-        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950" placeholder="TypeScript@123" />
+        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950" placeholder="Enter your password" />
         <button type="button" onClick={fillDemo} className="mt-5 w-full rounded-2xl border border-slate-200 px-5 py-3 font-black dark:border-slate-800">Demo login auto-fill</button>
         <button disabled={loading} className="mt-3 w-full rounded-2xl bg-gradient-to-r from-brand-600 to-mint-500 px-5 py-3 font-black text-white disabled:opacity-60">Login</button>
         <p className="mt-5 text-center text-sm text-slate-500">New here? <Link href="/register" className="font-black text-brand-600">Create an account</Link></p>

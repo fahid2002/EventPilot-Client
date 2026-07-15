@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart3, CalendarDays, CreditCard, ShieldCheck, Star, Users, type LucideIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { DashboardSummary, EventItem } from "@/types";
+import type { AdminUserCounts, DashboardSummary, EventItem, Role, User } from "@/types";
 import { EventCard } from "@/components/EventCard";
 import { EventForm } from "@/components/EventForm";
 import { ManageEventsTable } from "@/components/ManageEventsTable";
@@ -14,15 +14,21 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, token, isAuthenticated, isReady } = useAuth();
+  const { user, token, isAuthenticated, isReady, refreshUser } = useAuth();
   const { showToast } = useToast();
   const [tab, setTab] = useState("overview");
   const [saved, setSaved] = useState<EventItem[]>([]);
   const [attending, setAttending] = useState<EventItem[]>([]);
   const [pending, setPending] = useState<EventItem[]>([]);
   const [managedEvents, setManagedEvents] = useState<EventItem[]>([]);
+  const [adminUsers, setAdminUsers] = useState<User[]>([]);
+  const [adminUserCounts, setAdminUserCounts] = useState<AdminUserCounts>({ users: 0, organizers: 0, total: 0 });
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const processedPaymentSession = useRef<string | null>(null);
 
   const canOrganize = user?.role === "organizer" || user?.role === "admin";
   const isAdmin = user?.role === "admin";
@@ -30,6 +36,27 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isReady && !isAuthenticated) router.push("/login");
   }, [isReady, isAuthenticated, router]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const payment = params.get("payment");
+
+    if (!token || confirmingPayment || payment !== "success" || !sessionId || processedPaymentSession.current === sessionId) return;
+
+    processedPaymentSession.current = sessionId;
+    setConfirmingPayment(true);
+    api.confirmCheckout(sessionId, token)
+      .then(async () => {
+        await refreshUser();
+        showToast("Premium membership activated after payment.", "success");
+        router.replace("/dashboard");
+      })
+      .catch((error) => {
+        showToast(error instanceof Error ? error.message : "Payment completed, but membership refresh failed. Please reload shortly.", "error");
+      })
+      .finally(() => setConfirmingPayment(false));
+  }, [confirmingPayment, refreshUser, router, showToast, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -43,6 +70,14 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token || !isAdmin) return;
     api.adminPendingEvents(token).then((response) => setPending(response.data.events)).catch(() => undefined);
+  }, [token, isAdmin]);
+
+  useEffect(() => {
+    if (!token || !isAdmin) return;
+    api.adminUsers(token).then((response) => {
+      setAdminUsers(response.data.users);
+      setAdminUserCounts(response.data.counts);
+    }).catch(() => undefined);
   }, [token, isAdmin]);
 
   useEffect(() => {
@@ -127,6 +162,50 @@ export default function DashboardPage() {
     }
   };
 
+  const updateAdminUserRole = async (userId: string, role: Exclude<Role, "admin">) => {
+    if (!token || protectedDemo()) return;
+    setUpdatingUserId(userId);
+    try {
+      const response = await api.adminUpdateUserRole(userId, role, token);
+      setAdminUsers((items) => {
+        const next = items.map((item) => item._id === userId ? response.data.user : item);
+        setAdminUserCounts({
+          users: next.filter((item) => item.role === "user").length,
+          organizers: next.filter((item) => item.role === "organizer").length,
+          total: next.length
+        });
+        return next;
+      });
+      showToast("User role updated.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to update user role.", "error");
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const deleteAdminUser = async (userId: string) => {
+    if (!token || protectedDemo()) return;
+    setDeletingUserId(userId);
+    try {
+      await api.adminDeleteUser(userId, token);
+      setAdminUsers((items) => {
+        const next = items.filter((item) => item._id !== userId);
+        setAdminUserCounts({
+          users: next.filter((item) => item.role === "user").length,
+          organizers: next.filter((item) => item.role === "organizer").length,
+          total: next.length
+        });
+        return next;
+      });
+      showToast("User deleted.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to delete user.", "error");
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
   if (!user) return <div className="mx-auto max-w-7xl px-4 py-16">Loading dashboard...</div>;
 
   const nav = [
@@ -137,7 +216,8 @@ export default function DashboardPage() {
     ["add", "Add Event", canOrganize],
     ["manage", "Manage Events", canOrganize],
     ["analytics", "Analytics", canOrganize],
-    ["admin", "Admin Control", isAdmin]
+    ["admin", "Admin Control", isAdmin],
+    ["users", "Users", isAdmin]
   ] as const;
 
   return (
@@ -188,9 +268,67 @@ export default function DashboardPage() {
           {tab === "manage" ? <ManageEventsTable events={managedEvents} deletingId={deletingId} onDelete={deleteManagedEvent} /> : null}
           {tab === "analytics" ? <AnalyticsChart data={chartData} /> : null}
           {tab === "admin" ? <AdminSection pending={pending} approve={approve} /> : null}
+          {tab === "users" ? <AdminUsersSection users={adminUsers} counts={adminUserCounts} deletingId={deletingUserId} updatingId={updatingUserId} onDelete={deleteAdminUser} onRoleChange={updateAdminUserRole} /> : null}
         </div>
       </div>
     </section>
+  );
+}
+
+function AdminUsersSection({ users, counts, deletingId, updatingId, onDelete, onRoleChange }: { users: User[]; counts: AdminUserCounts; deletingId: string | null; updatingId: string | null; onDelete: (userId: string) => void; onRoleChange: (userId: string, role: Exclude<Role, "admin">) => void }) {
+  const sections: Array<{ role: Exclude<Role, "admin">; title: string; count: number }> = [
+    { role: "user", title: "Users", count: counts.users },
+    { role: "organizer", title: "Organizers", count: counts.organizers }
+  ];
+
+  return (
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+        <div>
+          <p className="font-black text-brand-600">Admin Dashboard</p>
+          <h2 className="mt-2 text-3xl font-black">Users</h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">Manage registered user and organizer accounts from MongoDB.</p>
+        </div>
+        <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black dark:bg-slate-950">Total accounts: {counts.total}</div>
+      </div>
+
+      <div className="mt-8 grid gap-6 xl:grid-cols-2">
+        {sections.map((section) => {
+          const sectionUsers = users.filter((item) => item.role === section.role);
+          return (
+            <div key={section.role} className="rounded-3xl border border-slate-200 p-5 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-black">{section.title}</h3>
+                <span className="rounded-full bg-brand-50 px-3 py-1 text-sm font-black text-brand-700 dark:bg-slate-800 dark:text-brand-100">{section.count}</span>
+              </div>
+
+              <div className="mt-5 grid gap-3">
+                {sectionUsers.length ? sectionUsers.map((account) => (
+                  <div key={account._id} className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+                    <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+                      <div>
+                        <p className="font-black">{account.name}</p>
+                        <p className="text-sm text-slate-500">{account.email}</p>
+                        <p className="mt-1 text-xs font-bold capitalize text-brand-600">{account.membership} membership | {account.status || "active"}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <select disabled={updatingId === account._id} value={account.role} onChange={(event) => onRoleChange(account._id, event.target.value as Exclude<Role, "admin">)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-black dark:border-slate-800 dark:bg-slate-900">
+                          <option value="user">User</option>
+                          <option value="organizer">Organizer</option>
+                        </select>
+                        <button disabled={deletingId === account._id} onClick={() => onDelete(account._id)} className="rounded-xl bg-red-500 px-3 py-2 text-sm font-black text-white disabled:opacity-60">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )) : <p className="rounded-2xl bg-slate-50 p-4 text-slate-500 dark:bg-slate-950">No {section.title.toLowerCase()} found.</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

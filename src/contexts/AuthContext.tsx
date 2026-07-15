@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "@/types";
 import { api } from "@/lib/api";
 
@@ -51,12 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(USER_KEY);
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     if (!token) return;
     const response = await api.me(token);
     setUser(response.data.user);
     localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-  };
+  }, [token]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshUser,
     setUser
-  }), [user, token, isReady]);
+  }), [user, token, isReady, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

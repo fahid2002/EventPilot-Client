@@ -54,3 +54,9 @@ export interface DashboardSummary {
   pendingEvents?: number;
   reports?: number;
 }
+
+export interface AdminUserCounts {
+  users: number;
+  organizers: number;
+  total: number;
+}

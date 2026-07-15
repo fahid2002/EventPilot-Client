@@ -43,9 +43,13 @@ export const api = {
   addEvent: (payload: Partial<EventItem>, token: string) => request<{ event: EventItem }>("/events", { method: "POST", token, body: JSON.stringify(payload) }),
   deleteEvent: (id: string, token: string) => request<{ deleted: boolean }>(`/events/${id}`, { method: "DELETE", token }),
   createCheckout: (eventId: string, token: string) => request<{ url: string }>(`/payments/checkout/${eventId}`, { method: "POST", token }),
+  confirmCheckout: (sessionId: string, token: string) => request<{ user: User }>(`/payments/confirm/${sessionId}`, { method: "POST", token }),
   demoUpgrade: (eventId: string, token: string) => request<{ user: User; attending: boolean }>(`/payments/demo-upgrade/${eventId}`, { method: "POST", token }),
   adminPendingEvents: (token: string) => request<{ events: EventItem[] }>("/admin/events/pending", { token }),
-  adminUpdateEventStatus: (eventId: string, status: "approved" | "rejected", token: string) => request<{ event: EventItem }>(`/admin/events/${eventId}/status`, { method: "PATCH", token, body: JSON.stringify({ status }) })
+  adminUpdateEventStatus: (eventId: string, status: "approved" | "rejected", token: string) => request<{ event: EventItem }>(`/admin/events/${eventId}/status`, { method: "PATCH", token, body: JSON.stringify({ status }) }),
+  adminUsers: (token: string) => request<{ users: User[]; counts: { users: number; organizers: number; total: number } }>("/admin/users", { token }),
+  adminUpdateUserRole: (userId: string, role: Exclude<Role, "admin">, token: string) => request<{ user: User }>(`/admin/users/${userId}/role`, { method: "PATCH", token, body: JSON.stringify({ role }) }),
+  adminDeleteUser: (userId: string, token: string) => request<{ deleted: boolean }>(`/admin/users/${userId}`, { method: "DELETE", token })
 };
 
 export { API_URL };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GoogleLogin } from "@react-oauth/google";
@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [role, setRole] = useState<Exclude<Role, "admin">>("user");
   const [loading, setLoading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,6 +29,14 @@ export default function RegisterPage() {
     reader.onload = () => setPhotoUrl(String(reader.result));
     reader.readAsDataURL(file);
     showToast("Photo selected. It will be shown on your profile after registration.", "success");
+  };
+
+  const removePhoto = () => {
+    setPhotoUrl("");
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
+    showToast("Selected photo removed. You can register with the default avatar.", "success");
   };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -78,11 +87,18 @@ export default function RegisterPage() {
             {photoUrl ? <img src={photoUrl} alt="Selected profile" className="h-full w-full object-cover" /> : "👤"}
           </div>
           <div>
-            <label className="inline-flex cursor-pointer items-center rounded-2xl border border-slate-200 px-5 py-3 font-black dark:border-slate-800">
-              Browse Photo
-              <input type="file" accept="image/*" className="hidden" onChange={previewPhoto} />
-            </label>
-            <p className="mt-2 text-sm text-slate-500">A neutral avatar appears if no photo is selected.</p>
+            <div className="flex flex-wrap gap-3">
+              <label className="inline-flex cursor-pointer items-center rounded-2xl border border-slate-200 px-5 py-3 font-black dark:border-slate-800">
+                Browse Photo
+                <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={previewPhoto} />
+              </label>
+              {photoUrl ? (
+                <button type="button" onClick={removePhoto} className="rounded-2xl border border-red-200 px-5 py-3 font-black text-red-500 dark:border-red-900">
+                  Remove Photo
+                </button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-sm text-slate-500">A neutral avatar appears if no photo is selected. If registration says the request is too large, remove the photo and try again.</p>
           </div>
         </div>
 

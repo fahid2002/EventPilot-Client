@@ -219,6 +219,8 @@ NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
 
 After changing Vercel environment variables, redeploy the project so Next.js can bake public variables into the production build.
 
+Current production environment variables are configured directly in Vercel. Local `.env.local` values are for development only and should not be committed.
+
 ## Verification Checklist
 
 Before submitting or deploying:
@@ -249,6 +251,7 @@ Server live URL:
 ```text
 https://eventpilot-server.onrender.com
 ```
+
 ## Credits
 
 Developed by **Fahid Hasan**.

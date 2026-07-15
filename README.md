@@ -249,3 +249,8 @@ Server live URL:
 ```text
 https://eventpilot-server.onrender.com
 ```
+## Credits
+
+Developed by **Fahid Hasan**.
+
+Built as a full-stack TypeScript project using Next.js, Express.js, MongoDB, JWT authentication, role-based authorization, Google login, Stripe payment integration, and responsive Tailwind CSS UI.

@@ -6,12 +6,23 @@ import type { EventItem } from "@/types";
 export function ManageEventsTable({ events, onDelete, deletingId }: { events: EventItem[]; onDelete: (eventId: string) => void; deletingId?: string | null }) {
   return (
     <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <p className="font-black text-brand-600">Organizer Dashboard</p>
-      <h2 className="mt-2 text-3xl font-black">Manage Events</h2>
-      <p className="mt-3 text-slate-600 dark:text-slate-300">These rows are loaded from MongoDB. Admins see all events; organizers see only their own events.</p>
+      <p className="font-black text-brand-600">
+        Organizer Dashboard
+      </p>
+      <h2 className="mt-2 text-3xl font-black">
+        Manage Events
+        </h2>
+      <p className="mt-3 text-slate-600 dark:text-slate-300">
+        These rows are loaded from MongoDB. Admins see all events; organizers see only their own events.
+        </p>
       <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800">
         <div className="hidden grid-cols-7 bg-slate-50 p-4 text-sm font-black text-slate-500 dark:bg-slate-950 md:grid">
-          <span className="col-span-2">Event</span><span>Category</span><span>Date</span><span>Price</span><span>Status</span><span>Actions</span>
+          <span className="col-span-2">Event</span>
+            <span>Category</span>
+            <span>Date</span>
+            <span>Price</span>
+            <span>Status</span>
+            <span>Actions</span>
         </div>
         {events.length ? events.map((event) => (
           <div key={event._id} className="grid gap-4 border-t border-slate-200 p-4 dark:border-slate-800 md:grid-cols-7 md:items-center">

@@ -1,1 +1,21 @@
-export default function Page() { return <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8"><p className="font-black text-brand-600">EventPilot</p><h1 className="mt-2 text-4xl font-black tracking-tight">Privacy Policy</h1><p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">EventPilot stores account, event, attendance, saved event, payment, and website review data only for platform functionality and user dashboard features.</p></section>; }
+export default function Page() {
+  return (
+    <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+      {/* Page label */}
+      <p className="font-black text-brand-600">
+        EventPilot
+      </p>
+
+      {/* Page heading */}
+      <h1 className="mt-2 text-4xl font-black tracking-tight">
+        Help Center
+      </h1>
+
+      {/* Help center description */}
+      <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
+        Use the contact page for account support, organizer verification,
+        premium access questions, and event listing issues.
+      </p>
+    </section>
+  );
+}
